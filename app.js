@@ -60,42 +60,42 @@ var stats = [
     }
 ];
 
-client.connect().then(function () {
+
+ client.connect().then(function() {
     console.log("Connected to MongoDB");
-    var db = client.db("statsdb");
+    const db = client.db("statsdb");
     console.log("Database created: statsdb");
-    var collection = db.collection("uscensus");
-     console.log("Collection created: uscensus");
-    collection.insertMany(stats, function(err, result) {
-        console.log('Inserted', result.insertedCount, 'documents');
-        
+    const collection = db.collection("uscensus");
+    console.log("Collection created: uscensus");
 
-     collection.findOne({ city: 'Corona', state: 'NY' }, function(err, coronaNY) {
-        console.log('Zip code for Corona, NY:', coronaNY.zip);
-
+    collection.insertMany(stats).then(function(res) {
+        console.log("Number of documents inserted: " + res.insertedCount);
         
-    collection.find({ state: 'CA' }).toArray(function(err, caCities) {
-                console.log('California cities income:');
-                caCities.forEach(function(city) {
-                    console.log(city.city + ':', '$' + city.income);
-                });
-         collection.updateMany(
-                    { state: 'AK' },
-                    { $set: { income: '38910', age: '46' } },
-                    function(err, updateResult) {
-                        console.log('Updated Alaska - Modified', updateResult.modifiedCount, 'documents');
-         
-         collection.find().sort({ state: 1 }).toArray(function(err, sortedDocs) {
-                            console.log('Records sorted by state:');
-                            sortedDocs.forEach(function(doc) {
-                                console.log(doc.state + ':', doc.city, '(Zip:', doc.zip + ')');
-                            });
-  client.close();
-  console.log('Connection closed');
-                        });
-                    }
-                );
-            });
-        });
+    collection.findOne({city: 'Corona', state: 'NY'}).then(function(res) {
+            console.log("Zip code for Corona, NY: " + res.zip);
+            client.close();
+
+       var myquery = { state: "CA" };
+    dbo.collection('uscensus').find(myquery)
+    .toArray()
+    .then(items => {
+        console.log("\nCalifornia cities income:");
+        items.forEach(item => console.log(item.city + ": $" + item.income));
     });
+     var myquery = { state: "AK" };
+    var newvalues = {$set: {income: "38910", age: "46"}};
+    dbo.collection('uscensus').updateOne(myquery, newvalues).then(function(res) {
+        console.log("\nAlaska document updated - income: 38910, age: 46");
+    });
+    var mysort = { state: 1 };
+    dbo.collection('uscensus').find()
+    .sort(mysort)
+    .toArray()
+    .then(items => {
+        console.log("\nRecords sorted by state (ascending):");
+        items.forEach(item => console.log(item.state + ": " + item.city + " (Zip: " + item.zip + ")"));
+        client.close();  // Close connection after last operation
+    });
+    });
+}).catch(err => console.error(err));
 });
